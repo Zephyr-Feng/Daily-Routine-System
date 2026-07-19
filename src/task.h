@@ -25,16 +25,10 @@ private:
     Time remind_time;
     Priority priority;
     Classify classify;
+    static int next_id;
 public:
-    Task(int i,string n,Time t1,Time t2,Priority p,Classify c){
-        id = i;
-        name = n;
-        start_time = t1;
-        remind_time = t2;
-        priority = p;
-        classify = c;
-    }
-    Task(){}
+    Task(string n, Time t1, Time t2, Priority p, Classify c);
+    Task() {}
     string show_name(){
         return name;
     }
