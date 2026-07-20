@@ -29,7 +29,8 @@ private:
 public:
     Task(string n, Time t1, Time t2, Priority p, Classify c);
     Task() {}
-    string show_name(){
+    string show_name()
+    {
         return name;
     }
     int show_id(){
