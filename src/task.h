@@ -1,23 +1,18 @@
-#include<iostream>
+#ifndef TASK_H
+#define TASK_H
+
+#include <iostream>
 using namespace std;
-struct Time{
+
+struct Time {
     int hour;
     int minute;
 };
-enum Priority
-{
-    high,
-    medium,
-    low,
-};
-enum Classify
-{
-    study,
-    play,
-    life,
-};
-class Task
-{
+
+enum Priority { high, medium, low };
+enum Classify { study, play, life };
+
+class Task {
 private:
     int id;
     string name;
@@ -26,26 +21,20 @@ private:
     Priority priority;
     Classify classify;
     static int next_id;
+
 public:
     Task(string n, Time t1, Time t2, Priority p, Classify c);
     Task() {}
-    string show_name()
-    {
-        return name;
-    }
-    int show_id(){
-        return id;
-    }
-    Time show_stime(){
-        return start_time;
-    }
-    Time show_rtime(){
-        return remind_time;
-    }
-    Priority show_priority(){
-        return priority;
-    }
-    Classify show_classify(){
-        return classify;
-    }
+
+    string show_name();
+    int show_id();
+    Time show_stime();
+    Time show_rtime();
+    Priority show_priority();
+    Classify show_classify();
+    void store();
+    void load();
+    
 };
+
+#endif
