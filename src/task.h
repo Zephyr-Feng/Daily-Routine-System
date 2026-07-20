@@ -32,7 +32,6 @@ public:
     Time show_rtime();
     Priority show_priority();
     Classify show_classify();
-    void store();
     void load();
     
 };
