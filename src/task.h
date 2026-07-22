@@ -2,11 +2,12 @@
 #define TASK_H
 
 #include <iostream>
+#include <vector>
 using namespace std;
 
 struct Time {
-    int hour;
-    int minute;
+    int month;
+    int date;
 };
 
 enum Priority { high, medium, low };
@@ -26,14 +27,18 @@ public:
     Task(string n, Time t1, Time t2, Priority p, Classify c);
     Task() {}
 
-    string show_name();
-    int show_id();
-    Time show_stime();
-    Time show_rtime();
-    Priority show_priority();
-    Classify show_classify();
-    void load();
-    
+    string show_name() const;
+    int show_id() const;
+    Time show_stime() const;
+    Time show_rtime() const;
+    Priority show_priority() const;
+    Classify show_classify() const;
+    void set_id(int new_id);
+    void show_task(int m,int d);
+    void remove(int i);
 };
+
+void save_task(const Task& t);
+vector<Task> load_tasks();
 
 #endif

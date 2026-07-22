@@ -45,3 +45,17 @@ bool login(const string& username, const string& password) {
     }
     return false;
 }
+
+bool user_exist(const string&username){
+    ifstream fin(USER_FILE);
+    string line;
+    while(getline(fin,line)){
+        stringstream ss(line);
+        string user_name;
+        ss >> user_name;
+        if(user_name==username){
+            return true;
+        }
+    }
+    return false;
+}
