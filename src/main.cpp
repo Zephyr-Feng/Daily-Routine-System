@@ -1,81 +1,51 @@
-#include <iostream>
-#include"task.h"
-#include"auth.h"
-using namespace std;
-void run_loop(){
-    cout << "please type your name" << endl;
-    cout << "please type your password" << endl;
-    string user_name;
-    string password;
-    cin >> user_name;
-    cin >> password;
-    while(!login(user_name,password)){
-        cin >> user_name;
-        cin >> password;
-        if (login(user_name, password))
-        {
-            cout << "log in successfully!" << endl;
-            break;
-        }
-        else if(!login(user_name,password)&&user_exist(user_name)){
-            cout << "wrong password!" << endl;
-        }
-        else{
-            register_user(user_name, password);
-            cout << "register successfully!" << endl;
-        }
+/**
+ * @brief 日程管理系统 - Qt 图形界面版
+ *
+ * 程序入口：启动时显示登录窗口，登录成功后进入主窗口。
+ *
+ * 使用 Qt5 Widgets 框架，兼容 Ubuntu 22.04。
+ *
+ * 编译方式：
+ *   mkdir build && cd build
+ *   cmake ..
+ *   make
+ *   ./myschedule
+ *
+ * 架构说明：
+ *   main.cpp         → 入口，创建 QApplication，启动 LoginWindow
+ *   loginwindow      → 登录/注册界面，调用 auth.h 验证
+ *   mainwindow       → 主界面，表格显示 + 任务操作 + 后台提醒
+ *   taskdialog       → 添加/编辑任务的表单对话框
+ *   taskmanager      → 数据层，管理任务列表 + 文件读写
+ *   task             → 数据模型，任务属性和序列化
+ *   auth             → 用户认证，SHA256 密码哈希
+ */
+#include <QApplication>
+#include "loginwindow.h"
+#include "mainwindow.h"
+
+int main(int argc, char* argv[]) {
+    QApplication app(argc, argv);
+
+    // 设置全局样式
+    app.setStyleSheet(
+        "QMainWindow { background-color: #fafafa; }"
+        "QTableView { font-size: 13px; gridline-color: #e0e0e0; }"
+        "QTableView::item { padding: 4px 8px; }"
+        "QHeaderView::section { background-color: #e8e8e8; padding: 6px; "
+        "  font-weight: bold; border: 1px solid #ddd; }"
+    );
+
+    // ===== 显示登录窗口 =====
+    LoginWindow loginDlg;
+    if (loginDlg.exec() != QDialog::Accepted) {
+        return 0;  // 用户取消登录，退出程序
     }
-    vector<Task> schedule = load_tasks();
-    while (true)
-    {
-        string command;
-        cin >> command;
-        if(command=="addtask"){
-            cout << "Please type your task" << endl;
-            string name;
-            string s_time;
-            string r_time;
-            string p_;
-            string c_;
-            cin >> name >> s_time >> r_time >> p_ >> c_;
-            Time s = parse_time(s_time);
-            Time r = parse_time(r_time);
-            Priority p = str_to_priority(p_);
-            Classify c = str_to_classify(c_);
-            Task t(name, s, r, p, c);
-            save_task(t);
-        }
-        else if(command=="showtask"){
-            cout << "please type m/md/all";
-            string cmd;
-            cin >> cmd;
-            if (cmd == "m")
-            {
-                int m;
-                cin >> m;
-                show_task(m);
-            }
-            else if(cmd=="md"){
-                int m,d;
-                cin>>m>>d;
-                show_task(m, d);
-            }
-            else{
-                show_task();
-            }
-        }
-        else if(command=="deltask"){
-            cout << "please type the task's id you want to delete" << endl;
-            int k;
-            cin >> k;
-            remove(k);
-        }
-    }
-}
-int main(int argc, char *argv[])
-{
-    string cmd = argv[1];
-    if(cmd=="run"){
-        run_loop();
-    }
+
+    // ===== 登录成功，进入主界面 =====
+    QString username = loginDlg.getUsername();
+    MainWindow mainWin(username);
+    mainWin.show();
+
+    return app.exec();
 }
