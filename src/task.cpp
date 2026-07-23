@@ -1,175 +1,121 @@
 #include "task.h"
-#include <fstream>
 #include <sstream>
+#include <vector>
 
+// 静态成员初始化：从 1 开始自动分配 id
 int Task::next_id = 1;
-const string TASK_FILE = "tasks.txt";
 
-Priority str_to_priority(const string &s)
-{
-    if (s == "high")
-        return high;
-    if (s == "medium")
-        return medium;
-    return low;
-}
+// ========== 构造函数 ==========
 
-Classify str_to_classify(const string &s)
-{
-    if (s == "study")
-        return study;
-    if (s == "play")
-        return play;
-    return life;
-}
-
-string priority_to_str(Priority p)
-{
-    if (p == high)
-        return "high";
-    if (p == medium)
-        return "medium";
-    return "low";
-}
-
-string classify_to_str(Classify c)
-{
-    if (c == study)
-        return "study";
-    if (c == play)
-        return "play";
-    return "life";
-}
-
-Time parse_time(const string &s)
-{
-    Time t;
-    size_t comma = s.find(',');
-    t.month = stoi(s.substr(0, comma));
-    t.date = stoi(s.substr(comma + 1));
-    return t;
-}
-
-string time_to_str(Time t)
-{
-    return to_string(t.month) + "," + to_string(t.date);
-}
-
-Task::Task(string n, Time t1, Time t2, Priority p, Classify c)
-{
-    id = next_id++;
+Task::Task(string n, Time start_t, Time remind_t, Priority p, Classify c) {
+    id = next_id++;       // 自动分配 id 并递增
     name = n;
-    start_time = t1;
-    remind_time = t2;
+    start_time = start_t;
+    remind_time = remind_t;
     priority = p;
     classify = c;
 }
 
-void Task::set_id(int new_id) { id = new_id; }
-
-void save_task(const Task &t)
-{
-    ofstream fout(TASK_FILE, ios::app);
-    fout << t.show_id() << " " << t.show_name() << " "
-         << time_to_str(t.show_stime()) << " "
-         << time_to_str(t.show_rtime()) << " "
-         << priority_to_str(t.show_priority()) << " "
-         << classify_to_str(t.show_classify()) << endl;
+Task::Task() {
+    id = next_id++;
+    name = "";
+    // Time 有默认构造
+    priority = MEDIUM;   // 默认优先级：中
+    classify = STUDY;    // 默认分类：学习
 }
 
-vector<Task> load_tasks()
-{
-    vector<Task> tasks;
-    ifstream fin(TASK_FILE);
-    string line;
+// ========== 序列化 ==========
 
-    while (getline(fin, line))
-    {
-        stringstream ss(line);
-        int id;
-        string name, time1, time2, pri_str, cat_str;
-
-        ss >> id >> name >> time1 >> time2 >> pri_str >> cat_str;
-
-        Task t(name, parse_time(time1), parse_time(time2),
-               str_to_priority(pri_str), str_to_classify(cat_str));
-        t.set_id(id);
-        tasks.push_back(t);
-    }
-    return tasks;
+/**
+ * 将 Task 序列化为用 | 分隔的一行文本
+ *
+ * 格式说明（共 14 个字段）：
+ *   id|name|年|月|日|时|分|提醒年|提醒月|提醒日|提醒时|提醒分|优先级|分类
+ *
+ * 示例：
+ *   1|学习C++|2026|7|23|9|0|2026|7|23|8|55|0|1
+ */
+string Task::serialize() const {
+    stringstream ss;
+    ss << id << "|"
+       << name << "|"
+       << start_time.year  << "|"
+       << start_time.month << "|"
+       << start_time.day   << "|"
+       << start_time.hour  << "|"
+       << start_time.minute << "|"
+       << remind_time.year  << "|"
+       << remind_time.month << "|"
+       << remind_time.day   << "|"
+       << remind_time.hour  << "|"
+       << remind_time.minute << "|"
+       << (int)priority << "|"
+       << (int)classify;
+    return ss.str();
 }
-void remove(int k)
-{
-    vector<Task> t = load_tasks();
-    vector<Task> ans;
-    for (int i = 0; i < t.size(); i++)
-    {
-        if (t[i].show_id() == k)
-        {
-            t.erase(t.begin() + i);
-        }
+
+/**
+ * 从一行序列化文本解析 Task
+ * 格式：id|name|年|月|日|时|分|提醒年|提醒月|提醒日|提醒时|提醒分|优先级|分类
+ */
+bool Task::deserialize(const string& line) {
+    if (line.empty()) return false;
+
+    // 用 | 分割字符串
+    vector<string> parts;
+    stringstream ss(line);
+    string part;
+    while (getline(ss, part, '|')) {
+        parts.push_back(part);
     }
-    ofstream fout(TASK_FILE);
-    for (int i = 0; i < t.size(); i++)
-    {
-        save_task(t[i]);
-    }
+
+    if (parts.size() != 14) return false;  // 需要恰好 14 个字段
+
+    // 按位置解析
+    id   = stoi(parts[0]);
+    name = parts[1];
+    start_time.year   = stoi(parts[2]);
+    start_time.month  = stoi(parts[3]);
+    start_time.day    = stoi(parts[4]);
+    start_time.hour   = stoi(parts[5]);
+    start_time.minute = stoi(parts[6]);
+    remind_time.year   = stoi(parts[7]);
+    remind_time.month  = stoi(parts[8]);
+    remind_time.day    = stoi(parts[9]);
+    remind_time.hour   = stoi(parts[10]);
+    remind_time.minute = stoi(parts[11]);
+    priority = (Priority)stoi(parts[12]);
+    classify = (Classify)stoi(parts[13]);
+
+    return true;
 }
-void show_task(int m, int d)
-{
-    ifstream fin(TASK_FILE);
-    string line;
 
-    while (getline(fin, line))
-    {
-        stringstream ss(line);
-        int id;
-        string name, time1, time2, pri_str, cat_str;
+// ========== 显示辅助 ==========
 
-        ss >> id >> name >> time1 >> time2 >> pri_str >> cat_str;
-        Time time_start = parse_time(time1);
-        if (time_start.month == m && time_start.date == d)
-        {
-            cout << id << " " << name << " " << time1 << " " << time2 << " " << pri_str << cat_str << endl;
-        }
-    }
-}
-void show_task(int m)
-{
-    fstream fin(TASK_FILE);
-    string line;
-
-    while (getline(fin, line))
-    {
-        stringstream ss(line);
-        int id;
-        string name, time1, time2, pri_str, cat_str;
-
-        ss >> id >> name >> time1 >> time2 >> pri_str >> cat_str;
-        Time time_start = parse_time(time1);
-        if (time_start.month == m)
-        {
-            cout << id << " " << name << " " << time1 << " " << time2 << " " << pri_str << cat_str << endl;
-        }
-    }
-}
-void show_task()
-{
-    fstream fin(TASK_FILE);
-    string line;
-
-    while (getline(fin, line))
-    {
-        stringstream ss(line);
-        int id;
-        string name, time1, time2, pri_str, cat_str;
-        ss >> id >> name >> time1 >> time2 >> pri_str >> cat_str;
-        cout << id << " " << name << " " << time1 << " " << time2 << " " << pri_str << cat_str << endl;
+string Task::priorityToString() const {
+    switch (priority) {
+        case HIGH:   return "高";
+        case MEDIUM: return "中";
+        case LOW:    return "低";
+        default:     return "未知";
     }
 }
-string Task::show_name() const { return name; }
-int Task::show_id() const { return id; }
-Time Task::show_stime() const { return start_time; }
-Time Task::show_rtime() const { return remind_time; }
-Priority Task::show_priority() const { return priority; }
-Classify Task::show_classify() const { return classify; }
+
+string Task::classifyToString() const {
+    switch (classify) {
+        case STUDY: return "学习";
+        case PLAY:  return "娱乐";
+        case LIFE:  return "生活";
+        default:    return "未知";
+    }
+}
+
+Priority Task::parsePriority(const string& s) {
+    int v = stoi(s);
+    return (Priority)v;
+}
+
+Classify Task::parseClassify(const string& s) {
+    int v = stoi(s);
+    return (Classify)v;
+}
