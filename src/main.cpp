@@ -1,10 +1,11 @@
 #include <iostream>
-#include"task.h"
-#include"auth.h"
+#include "task.h"
+#include "auth.h"
 using namespace std;
+
 void run_loop(){
-    cout << "please type your name" << endl;
-    cout << "please type your password" << endl;
+    cout << "please type your name: ";
+    cout << "please type your password: ";
     string user_name;
     string password;
     cin >> user_name;
@@ -17,12 +18,13 @@ void run_loop(){
             cout << "log in successfully!" << endl;
             break;
         }
-        else if(!login(user_name,password)&&user_exist(user_name)){
+        else if (!login(user_name,password) && user_exist(user_name)){
             cout << "wrong password!" << endl;
         }
         else{
             register_user(user_name, password);
             cout << "register successfully!" << endl;
+            break;
         }
     }
     vector<Task> schedule = load_tasks();
@@ -33,29 +35,47 @@ void run_loop(){
         if(command=="addtask"){
             cout << "Please type your task" << endl;
             string name;
-            string s_time;
-            string r_time;
+            string date_s, time_s;
+            string date_r, time_r;
             string p_;
             string c_;
-            cin >> name >> s_time >> r_time >> p_ >> c_;
-            Time s = parse_time(s_time);
-            Time r = parse_time(r_time);
+
+            cout << "name: ";
+            cin >> name;
+            cout << "start date (YYYY-MM-DD): ";
+            cin >> date_s;
+            cout << "start time (HH:MM): ";
+            cin >> time_s;
+            cout << "remind date (YYYY-MM-DD): ";
+            cin >> date_r;
+            cout << "remind time (HH:MM): ";
+            cin >> time_r;
+            cout << "priority (high/medium/low): ";
+            cin >> p_;
+            cout << "classify (study/play/life): ";
+            cin >> c_;
+
+            Time s = parse_time(date_s + "T" + time_s);
+            Time r = parse_time(date_r + "T" + time_r);
             Priority p = str_to_priority(p_);
             Classify c = str_to_classify(c_);
             Task t(name, s, r, p, c);
             save_task(t);
+            cout << "task added!" << endl;
         }
         else if(command=="showtask"){
-            cout << "please type m/md/all";
+            cout << "type m / md / all: ";
             string cmd;
             cin >> cmd;
             if (cmd == "m")
             {
+                cout << "month: ";
                 int m;
                 cin >> m;
                 show_task(m);
             }
             else if(cmd=="md"){
+                cout << "month day: ";
                 int m,d;
                 cin>>m>>d;
                 show_task(m, d);
@@ -70,8 +90,12 @@ void run_loop(){
             cin >> k;
             remove(k);
         }
+        else if(command=="exit"){
+            break;
+        }
     }
 }
+
 int main(int argc, char *argv[])
 {
     string cmd = argv[1];
