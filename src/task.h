@@ -12,8 +12,12 @@ struct Time {
 
 enum Priority { high, medium, low };
 enum Classify { study, play, life };
-
-class Task {
+Priority str_to_priority(const string &s);
+string priority_to_str(Priority p);
+Classify str_to_classify(const string &s);
+string classify_to_str(Classify c);
+class Task
+{
 private:
     int id;
     string name;
@@ -34,11 +38,13 @@ public:
     Priority show_priority() const;
     Classify show_classify() const;
     void set_id(int new_id);
-    void show_task(int m,int d);
     void remove(int i);
 };
-
+void show_task(int m,int d);
+void show_task(int m);
+void show_task();
 void save_task(const Task& t);
+void remove(int k);
 vector<Task> load_tasks();
-
+Time parse_time(const string &s);
 #endif

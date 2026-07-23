@@ -98,7 +98,24 @@ vector<Task> load_tasks()
     }
     return tasks;
 }
-void Task::show_task(int m, int d)
+void remove(int k)
+{
+    vector<Task> t = load_tasks();
+    vector<Task> ans;
+    for (int i = 0; i < t.size(); i++)
+    {
+        if (t[i].show_id() == k)
+        {
+            t.erase(t.begin() + i);
+        }
+    }
+    ofstream fout(TASK_FILE);
+    for (int i = 0; i < t.size(); i++)
+    {
+        save_task(t[i]);
+    }
+}
+void show_task(int m, int d)
 {
     ifstream fin(TASK_FILE);
     string line;
@@ -117,18 +134,37 @@ void Task::show_task(int m, int d)
         }
     }
 }
-void Task::remove(int k){
-    vector<Task> t = load_tasks();
-    vector<Task> ans;
-    for (int i = 0; i < t.size(); i++)
+void show_task(int m)
+{
+    fstream fin(TASK_FILE);
+    string line;
+
+    while (getline(fin, line))
     {
-        if(t[i].show_id()==k){
-            t.erase(t.begin() + i);
+        stringstream ss(line);
+        int id;
+        string name, time1, time2, pri_str, cat_str;
+
+        ss >> id >> name >> time1 >> time2 >> pri_str >> cat_str;
+        Time time_start = parse_time(time1);
+        if (time_start.month == m)
+        {
+            cout << id << " " << name << " " << time1 << " " << time2 << " " << pri_str << cat_str << endl;
         }
     }
-    ofstream fout(TASK_FILE);
-    for (int i = 0; i < t.size();i++){
-        save_task(t[i]);
+}
+void show_task()
+{
+    fstream fin(TASK_FILE);
+    string line;
+
+    while (getline(fin, line))
+    {
+        stringstream ss(line);
+        int id;
+        string name, time1, time2, pri_str, cat_str;
+        ss >> id >> name >> time1 >> time2 >> pri_str >> cat_str;
+        cout << id << " " << name << " " << time1 << " " << time2 << " " << pri_str << cat_str << endl;
     }
 }
 string Task::show_name() const { return name; }
