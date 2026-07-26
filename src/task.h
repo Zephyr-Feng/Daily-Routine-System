@@ -46,6 +46,7 @@ public:
  Priority show_priority() const;
  Classify show_classify() const;
  void set_id(int new_id);
+ static void reset_next_id(int id);
  void remove(int i);
 };
 void show_task(int m,int d);

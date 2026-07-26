@@ -72,6 +72,8 @@ Task::Task(string n, Time t1, Time t2, Priority p, Classify c) {
 
 void Task::set_id(int new_id) { id = new_id; }
 
+void Task::reset_next_id(int id) { next_id = id; }
+
 void save_task(const Task &t) {
     ofstream fout(TASK_FILE, ios::app);
     fout << t.show_id() << " " << t.show_name() << " "
@@ -83,6 +85,7 @@ void save_task(const Task &t) {
 
 vector<Task> load_tasks() {
     vector<Task> tasks;
+    int max_id = 0;
     ifstream fin(TASK_FILE);
     string line;
     while (getline(fin, line)) {
@@ -94,7 +97,9 @@ vector<Task> load_tasks() {
                str_to_priority(pri_str), str_to_classify(cat_str));
         t.set_id(id);
         tasks.push_back(t);
+        if (id > max_id) max_id = id;
     }
+    if (max_id > 0) Task::reset_next_id(max_id + 1);
     return tasks;
 }
 
@@ -122,9 +127,11 @@ void show_task(int m, int d) {
         ss >> id >> name >> time1 >> time2 >> pri_str >> cat_str;
         Time t = parse_time(time1);
         if (t.month == m && t.day == d) {
-            cout << id << "  " << name << "  "
-                 << time_to_display(t) << "  "
-                 << pri_str << "  " << cat_str << endl;
+            cout << left << setw(5) << id << "  "
+                 << setw(20) << name << "  "
+                 << setw(19) << time_to_display(t) << "  "
+                 << setw(8) << pri_str << "  "
+                 << setw(8) << cat_str << endl;
         }
     }
 }
@@ -139,9 +146,11 @@ void show_task(int m) {
         ss >> id >> name >> time1 >> time2 >> pri_str >> cat_str;
         Time t = parse_time(time1);
         if (t.month == m) {
-            cout << id << "  " << name << "  "
-                 << time_to_display(t) << "  "
-                 << pri_str << "  " << cat_str << endl;
+            cout << left << setw(5) << id << "  "
+                 << setw(20) << name << "  "
+                 << setw(19) << time_to_display(t) << "  "
+                 << setw(8) << pri_str << "  "
+                 << setw(8) << cat_str << endl;
         }
     }
 }
@@ -155,9 +164,11 @@ void show_task() {
         string name, time1, time2, pri_str, cat_str;
         ss >> id >> name >> time1 >> time2 >> pri_str >> cat_str;
         Time t = parse_time(time1);
-        cout << id << "  " << name << "  "
-             << time_to_display(t) << "  "
-             << pri_str << "  " << cat_str << endl;
+        cout << left << setw(5) << id << "  "
+             << setw(20) << name << "  "
+             << setw(19) << time_to_display(t) << "  "
+             << setw(8) << pri_str << "  "
+             << setw(8) << cat_str << endl;
     }
 }
 

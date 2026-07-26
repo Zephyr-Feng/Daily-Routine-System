@@ -1,7 +1,34 @@
 #include <iostream>
 #include "task.h"
 #include "auth.h"
+#include <thread>
+#include <chrono>
+#include <ctime>
+#include <set>
 using namespace std;
+
+void reminder_check() {
+    set<int> notified;
+    while (true) {
+        this_thread::sleep_for(chrono::seconds(30));
+        time_t now = time(nullptr);
+        tm* local = localtime(&now);
+        vector<Task> tasks = load_tasks();
+        for (auto &t : tasks) {
+            Time rt = t.show_rtime();
+            if (rt.year == local->tm_year + 1900 &&
+                rt.month == local->tm_mon + 1 &&
+                rt.day == local->tm_mday &&
+                rt.hour == local->tm_hour &&
+                rt.minute == local->tm_min) {
+                if (notified.find(t.show_id()) == notified.end()) {
+                    cout << "\n[REMINDER] \"" << t.show_name() << "\" at " << time_to_display(t.show_stime()) << endl;
+                    notified.insert(t.show_id());
+                }
+            }
+        }
+    }
+}
 
 void run_loop(){
     cout << "please type your name: ";
@@ -28,6 +55,8 @@ void run_loop(){
         }
     }
     vector<Task> schedule = load_tasks();
+    thread reminder(reminder_check);
+    reminder.detach();
     while (true)
     {
         string command;
@@ -98,8 +127,17 @@ void run_loop(){
 
 int main(int argc, char *argv[])
 {
+    if (argc < 2) {
+        cerr << "Usage: myschedule run" << endl;
+        return 1;
+    }
     string cmd = argv[1];
     if(cmd=="run"){
         run_loop();
+    }
+    else if(cmd=="--help" || cmd=="-h"){
+        cout << "Usage: myschedule <command>" << endl;
+        cout << "Commands:" << endl;
+        cout << "  run              Interactive shell mode" << endl;
     }
 }
