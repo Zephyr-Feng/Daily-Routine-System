@@ -12,20 +12,9 @@
 #include <QHeaderView>
 #include "taskmanager.h"
 #include "audioplayer.h"
+#include "speechrecognizer.h"
 
-/**
- * @brief MainWindow - 主窗口
- *
- * 功能：
- *  1. 任务表格（按开始时间排序，列对齐）
- *  2. 工具栏：添加 / 删除 / 编辑 / 刷新
- *  3. 状态栏：当前用户 + 下次提醒
- *  4. 后台定时器：每10秒检查任务提醒
- *  5. 提醒：弹出对话框
- *
- * 表格列：
- *  ID | 任务名称 | 开始时间 | 提醒时间 | 优先级 | 分类
- */
+
 class MainWindow : public QMainWindow {
     Q_OBJECT
 
@@ -49,6 +38,9 @@ private slots:
     /** 定时检查提醒 */
     void checkReminders();
 
+    /** 语音录入任务 */
+    void onVoiceInput();
+
 private:
     /** 初始化界面布局 */
     void setupUI();
@@ -68,6 +60,7 @@ private:
     QLabel*              m_statusLabel;    // 状态标签
     QTimer*              m_remindTimer;    // 提醒定时器
     AudioPlayer*         m_audioPlayer;    // 音频播放器（Stage 2 新增）
+    SpeechRecognizer*    m_speechRec;      // 语音识别器（Stage 3 新增）
     QString              m_username;       // 当前用户名
 
     // 工具栏按钮

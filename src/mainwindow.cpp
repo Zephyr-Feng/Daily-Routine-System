@@ -1,5 +1,7 @@
 #include "mainwindow.h"
 #include "taskdialog.h"
+#include "voiceinputdialog.h"
+#include <QCoreApplication>
 #include <QHeaderView>
 #include <QVBoxLayout>
 #include <QMessageBox>
@@ -13,28 +15,32 @@ MainWindow::MainWindow(const QString& username, QWidget* parent)
     setupToolBar();
     setupTable();
 
-    // ===== 加载任务数据 =====
+    //  加载任务数据 
     int count = TaskManager::instance().loadFromFile("tasks.txt");
     m_statusLabel->setText(
         QString("已加载 %1 个任务").arg(count > 0 ? count : 0)
     );
     refreshTable();
 
-    // ===== 初始化音频播放器（Stage 2 新增）=====
+    // 初始化音频播放器
     m_audioPlayer = new AudioPlayer(this);
 
-    // ===== 启动提醒定时器（每10秒检查一次）=====
+    // 初始化语音识别器
+    // Whisper small 模型，中文识别效果好
+    m_speechRec = new SpeechRecognizer("small", this);
+
+    //  启动提醒定时器（每10秒检查一次）
     m_remindTimer = new QTimer(this);
     connect(m_remindTimer, &QTimer::timeout,
             this, &MainWindow::checkReminders);
     m_remindTimer->start(10000);  // 10秒
 
-    // ===== 监听数据变化自动刷新表格 =====
+    // 监听数据变化自动刷新表格 
     connect(&TaskManager::instance(), &TaskManager::tasksChanged,
             this, &MainWindow::refreshTable);
 }
 
-// ========== 界面初始化 ==========
+// 界面初始化 
 
 void MainWindow::setupUI() {
     // 窗口尺寸：800x500
@@ -66,7 +72,7 @@ void MainWindow::setupToolBar() {
     connect(m_addAction, &QAction::triggered, this, &MainWindow::onAddTask);
 
     // 编辑任务
-    m_editAction = toolbar->addAction("✎ 编辑任务");
+    m_editAction = toolbar->addAction(" 编辑任务");
     m_editAction->setToolTip("编辑选中的任务");
     connect(m_editAction, &QAction::triggered, this, &MainWindow::onEditTask);
 
@@ -74,6 +80,13 @@ void MainWindow::setupToolBar() {
     m_deleteAction = toolbar->addAction("✕ 删除任务");
     m_deleteAction->setToolTip("删除选中的任务");
     connect(m_deleteAction, &QAction::triggered, this, &MainWindow::onDeleteTask);
+
+    toolbar->addSeparator();
+
+    // 语音录入
+    QAction* voiceAction = toolbar->addAction(" 语音录入");
+    voiceAction->setToolTip("通过语音识别录入新任务");
+    connect(voiceAction, &QAction::triggered, this, &MainWindow::onVoiceInput);
 
     toolbar->addSeparator();
 
@@ -127,7 +140,7 @@ void MainWindow::setupTable() {
     setCentralWidget(m_tableView);
 }
 
-// ========== 表格刷新 ==========
+// 表格刷新 
 
 void MainWindow::refreshTable() {
     m_model->removeRows(0, m_model->rowCount());  // 清空
@@ -177,7 +190,7 @@ void MainWindow::refreshTable() {
     );
 }
 
-// ========== 选中任务 ==========
+// 选中任务 
 
 int MainWindow::selectedTaskId() const {
     QModelIndexList selection = m_tableView->selectionModel()->selectedRows();
@@ -187,7 +200,7 @@ int MainWindow::selectedTaskId() const {
     return m_model->item(row, 0)->text().toInt();
 }
 
-// ========== 添加任务 ==========
+// 添加任务 
 
 void MainWindow::onAddTask() {
     TaskDialog dlg(this);
@@ -197,18 +210,18 @@ void MainWindow::onAddTask() {
     if (dlg.exec() == QDialog::Accepted) {
         Task newTask = dlg.getTask();
         if (TaskManager::instance().addTask(newTask)) {
-            m_statusLabel->setText("✅ 任务添加成功");
+            m_statusLabel->setText(" 任务添加成功");
         } else {
             QMessageBox::warning(this, "添加失败",
                 "任务添加失败！可能的原因：\n"
                 "• 开始时间与其他任务冲突\n"
                 "• 任务名称 + 开始时间重复");
-            m_statusLabel->setText("❌ 任务添加失败");
+            m_statusLabel->setText(" 任务添加失败");
         }
     }
 }
 
-// ========== 删除任务 ==========
+// 删除任务
 
 void MainWindow::onDeleteTask() {
     int id = selectedTaskId();
@@ -225,12 +238,12 @@ void MainWindow::onDeleteTask() {
 
     if (ret == QMessageBox::Yes) {
         if (TaskManager::instance().deleteTask(id)) {
-            m_statusLabel->setText("🗑 任务已删除");
+            m_statusLabel->setText(" 任务已删除");
         }
     }
 }
 
-// ========== 编辑任务 ==========
+// 编辑任务 
 
 void MainWindow::onEditTask() {
     int id = selectedTaskId();
@@ -249,12 +262,12 @@ void MainWindow::onEditTask() {
     if (dlg.exec() == QDialog::Accepted) {
         Task updated = dlg.getTask();
         if (TaskManager::instance().updateTask(updated)) {
-            m_statusLabel->setText("✅ 任务已更新");
+            m_statusLabel->setText("任务已更新");
         }
     }
 }
 
-// ========== 提醒检查 ==========
+// 提醒检查 
 
 void MainWindow::checkReminders() {
     std::vector<Task> due = TaskManager::instance().checkReminders();
@@ -279,7 +292,38 @@ void MainWindow::checkReminders() {
         msgBox->setAttribute(Qt::WA_DeleteOnClose);  // 自动释放
         msgBox->show();  // 非阻塞，可以同时弹出多个提醒
 
-        // ===== 播放提醒音（Stage 2 新增）=====
+        // 播放提醒音
         m_audioPlayer->playReminder();
+    }
+}
+
+// 语音录入
+
+void MainWindow::onVoiceInput() {
+    if (!m_speechRec->isReady()) {
+        QMessageBox::warning(this, "语音识别未就绪",
+            "语音识别引擎未初始化！\n\n"
+            "请确认以下环境已配置：\n"
+            "1. Python3 已安装\n"
+            "2. pip3 install vosk\n"
+            "3. 中文语音模型已下载到程序目录\n"
+            "   (vosk-model-small-cn-0.22)");
+        return;
+    }
+
+    VoiceInputDialog dlg(m_speechRec, this);
+    dlg.setWindowTitle(" 语音录入任务");
+
+    if (dlg.exec() == QDialog::Accepted) {
+        Task newTask = dlg.getTask();
+        if (TaskManager::instance().addTask(newTask)) {
+            m_statusLabel->setText(" 语音任务添加成功");
+        } else {
+            QMessageBox::warning(this, "添加失败",
+                "语音任务添加失败！可能的原因：\n"
+                "• 开始时间与其他任务冲突\n"
+                "• 任务名称 + 开始时间重复");
+            m_statusLabel->setText(" 语音任务添加失败");
+        }
     }
 }

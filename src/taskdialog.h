@@ -14,27 +14,7 @@
 #include <QGroupBox>
 #include "task.h"
 
-/**
- * @brief TaskDialog - 添加/编辑任务对话框
- *
- * 两种模式：
- *  1. 新建模式：用户填写所有字段，点击确定后返回新 Task
- *  2. 编辑模式：加载已有 Task 到表单，用户修改后保存
- *
- * 使用方式：
- *   // 新建
- *   TaskDialog dlg(this);
- *   if (dlg.exec() == QDialog::Accepted) {
- *       Task newTask = dlg.getTask();
- *   }
- *
- *   // 编辑
- *   TaskDialog dlg(this);
- *   dlg.setTask(existingTask);
- *   if (dlg.exec() == QDialog::Accepted) {
- *       Task updated = dlg.getTask();
- *   }
- */
+
 class TaskDialog : public QDialog {
     Q_OBJECT
 

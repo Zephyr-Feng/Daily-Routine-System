@@ -5,14 +5,14 @@
 #include <algorithm>
 #include <set>
 
-// ========== 单例 ==========
+// 单例 
 
 TaskManager& TaskManager::instance() {
     static TaskManager mgr;
     return mgr;
 }
 
-// ========== 文件读写 ==========
+// 文件读写 
 
 int TaskManager::loadFromFile(const QString& filePath) {
     QFile file(filePath);
@@ -74,7 +74,7 @@ bool TaskManager::saveToFile(const QString& filePath) {
     return true;
 }
 
-// ========== 添加任务 ==========
+// 添加任务 
 
 bool TaskManager::addTask(const Task& task) {
     std::lock_guard<std::mutex> lock(m_mutex);
@@ -108,7 +108,7 @@ bool TaskManager::addTask(const Task& task) {
     return true;
 }
 
-// ========== 删除任务 ==========
+//  删除任务 
 
 bool TaskManager::deleteTask(int id) {
     std::lock_guard<std::mutex> lock(m_mutex);
@@ -126,7 +126,7 @@ bool TaskManager::deleteTask(int id) {
     return true;
 }
 
-// ========== 更新任务 ==========
+// 更新任务 
 
 bool TaskManager::updateTask(const Task& updated) {
     std::lock_guard<std::mutex> lock(m_mutex);
@@ -146,7 +146,7 @@ bool TaskManager::updateTask(const Task& updated) {
     return false;
 }
 
-// ========== 查找任务 ==========
+// 查找任务 
 
 Task* TaskManager::findTask(int id) {
     for (auto& t : m_tasks) {
@@ -155,7 +155,7 @@ Task* TaskManager::findTask(int id) {
     return nullptr;
 }
 
-// ========== 提醒检查 ==========
+// 提醒检查 
 
 std::vector<Task> TaskManager::checkReminders() {
     std::lock_guard<std::mutex> lock(m_mutex);

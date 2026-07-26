@@ -1,17 +1,4 @@
-/**
- * @brief AudioRecorder - 录音器（录制自定义任务提醒音）
- *
- * 功能：
- *  1. 通过系统麦克风录音为 WAV 文件
- *  2. 双重方案：Qt Multimedia QAudioRecorder + arecord 回退
- *  3. 信号通知录音完成/错误
- *
- * 使用：
- *  AudioRecorder recorder;
- *  recorder.startRecording("my_reminder.wav");
- *  // ... 用户说完 ...
- *  recorder.stopRecording();
- */
+
 #ifndef AUDIORECORDER_H
 #define AUDIORECORDER_H
 

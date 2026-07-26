@@ -10,12 +10,12 @@ void TaskDialog::setupUI() {
     setWindowTitle("添加任务");
     setFixedSize(420, 420);
 
-    // ========== 任务名称 ==========
+    // 任务名称 
     QLabel* nameLabel = new QLabel("任务名称：");
     m_nameEdit = new QLineEdit();
     m_nameEdit->setPlaceholderText("例如：学习C++");
 
-    // ========== 开始时间 ==========
+    //  开始时间 
     QGroupBox* startGroup = new QGroupBox("开始时间");
     QGridLayout* startLayout = new QGridLayout();
 
@@ -44,7 +44,7 @@ void TaskDialog::setupUI() {
     startLayout->addWidget(m_startMinute,1, 3);
     startGroup->setLayout(startLayout);
 
-    // ========== 提醒时间 ==========
+    // 提醒时间 
     QGroupBox* remindGroup = new QGroupBox("提醒时间");
     QGridLayout* remindLayout = new QGridLayout();
 
@@ -73,7 +73,7 @@ void TaskDialog::setupUI() {
     remindLayout->addWidget(m_remindMinute,1, 3);
     remindGroup->setLayout(remindLayout);
 
-    // ========== 优先级和分类 ==========
+    // 优先级和分类 
     QLabel* priLabel = new QLabel("优先级：");
     m_priorityCmb = new QComboBox();
     m_priorityCmb->addItem("高", HIGH);
@@ -94,7 +94,7 @@ void TaskDialog::setupUI() {
     attrLayout->addWidget(clsLabel);
     attrLayout->addWidget(m_classifyCmb);
 
-    // ========== 按钮 ==========
+    // 按钮 
     QPushButton* okBtn = new QPushButton("确定");
     QPushButton* cancelBtn = new QPushButton("取消");
     okBtn->setStyleSheet(
@@ -107,7 +107,7 @@ void TaskDialog::setupUI() {
     btnLayout->addWidget(okBtn);
     btnLayout->addWidget(cancelBtn);
 
-    // ========== 总体布局 ==========
+    // 总体布局 
     QVBoxLayout* mainLayout = new QVBoxLayout(this);
     mainLayout->addWidget(nameLabel);
     mainLayout->addWidget(m_nameEdit);

@@ -8,18 +8,18 @@ LoginWindow::LoginWindow(QWidget* parent)
 }
 
 void LoginWindow::setupUI() {
-    // ========== 窗口基本设置 ==========
+    // 窗口基本设置 
     setWindowTitle("日程管理系统 - 登录");
     setFixedSize(380, 250);
 
-    // ========== 标题 ==========
-    QLabel* titleLabel = new QLabel("📅 日程管理系统");
+    // 标题 
+    QLabel* titleLabel = new QLabel(" 日程管理系统");
     titleLabel->setAlignment(Qt::AlignCenter);
     titleLabel->setStyleSheet(
         "font-size: 20px; font-weight: bold; margin-bottom: 10px;"
     );
 
-    // ========== 用户名输入行 ==========
+    // 用户名输入行 
     QLabel* userLabel = new QLabel("用户名：");
     m_usernameEdit = new QLineEdit();
     m_usernameEdit->setPlaceholderText("请输入用户名");
@@ -28,7 +28,7 @@ void LoginWindow::setupUI() {
     userLayout->addWidget(userLabel);
     userLayout->addWidget(m_usernameEdit);
 
-    // ========== 密码输入行 ==========
+    // 密码输入行 
     QLabel* passLabel = new QLabel("密　码：");
     m_passwordEdit = new QLineEdit();
     m_passwordEdit->setEchoMode(QLineEdit::Password);  // 密码显示为 ●●●
@@ -38,7 +38,7 @@ void LoginWindow::setupUI() {
     passLayout->addWidget(passLabel);
     passLayout->addWidget(m_passwordEdit);
 
-    // ========== 按钮行 ==========
+    // 按钮行 
     m_loginBtn    = new QPushButton("登 录");
     m_registerBtn = new QPushButton("注 册");
 
@@ -57,7 +57,7 @@ void LoginWindow::setupUI() {
     btnLayout->addWidget(m_registerBtn);
     btnLayout->addStretch();
 
-    // ========== 总体布局 ==========
+    // 总体布局 
     QVBoxLayout* mainLayout = new QVBoxLayout(this);
     mainLayout->addWidget(titleLabel);
     mainLayout->addSpacing(15);
@@ -68,7 +68,7 @@ void LoginWindow::setupUI() {
     mainLayout->addLayout(btnLayout);
     mainLayout->addStretch();
 
-    // ========== 信号连接 ==========
+    //  信号连接
     connect(m_loginBtn,    &QPushButton::clicked, this, &LoginWindow::onLogin);
     connect(m_registerBtn, &QPushButton::clicked, this, &LoginWindow::onRegister);
 
@@ -80,13 +80,13 @@ void LoginWindow::onLogin() {
     QString username = m_usernameEdit->text().trimmed();
     QString password = m_passwordEdit->text();
 
-    // ===== 输入校验 =====
+    //  输入校验 
     if (username.isEmpty() || password.isEmpty()) {
         QMessageBox::warning(this, "提示", "用户名和密码不能为空！");
         return;
     }
 
-    // ===== 调用 auth.h 的登录函数 =====
+    // 调用 auth.h 的登录函数 
     if (login(username.toStdString(), password.toStdString())) {
         m_username = username;
         QMessageBox::information(this, "成功",
@@ -104,7 +104,7 @@ void LoginWindow::onRegister() {
     QString username = m_usernameEdit->text().trimmed();
     QString password = m_passwordEdit->text();
 
-    // ===== 输入校验 =====
+    //  输入校验 
     if (username.isEmpty() || password.isEmpty()) {
         QMessageBox::warning(this, "提示", "用户名和密码不能为空！");
         return;
@@ -115,7 +115,7 @@ void LoginWindow::onRegister() {
         return;
     }
 
-    // ===== 调用 auth.h 的注册函数 =====
+    // 调用 auth.h 的注册函数 
     if (register_user(username.toStdString(), password.toStdString())) {
         QMessageBox::information(this, "注册成功",
             QString("账号 %1 注册成功！现在可以登录了。").arg(username));

@@ -7,19 +7,7 @@
 #include <mutex>
 #include "task.h"
 
-/**
- * @brief TaskManager - 任务数据管理器（单例模式）
- *
- * 职责：
- *  1. 在内存中管理任务列表 (vector<Task>)
- *  2. 任务数据的文件读写 (tasks.txt)
- *  3. 提供增删改查接口
- *  4. 检查任务是否需要提醒
- *
- * 使用方式：
- *   TaskManager::instance().loadFromFile("tasks.txt");
- *   auto tasks = TaskManager::instance().allTasks();
- */
+
 class TaskManager : public QObject {
     Q_OBJECT
 

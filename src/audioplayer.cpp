@@ -1,14 +1,4 @@
-/**
- * @brief AudioPlayer 实现 — 音频播放（Qt Multimedia + paplay 回退）
- *
- * 技术方案：
- *  首选：Qt Multimedia QMediaPlayer（集成好，支持 WAV/MP3/OGG）
- *  回退：QProcess 调用 paplay（PulseAudio 命令行播放器）
- *
- * 默认提示音：
- *  首次运行时生成 default_reminder.wav（440Hz 正弦波，0.5 秒）
- *  文件放在可执行文件同目录下
- */
+
 #include "audioplayer.h"
 #include <QFile>
 #include <QFileInfo>
@@ -24,7 +14,7 @@ AudioPlayer::AudioPlayer(QObject* parent)
     , m_player(nullptr)
     , m_useFallback(false)
 {
-    // ===== 方案1：尝试初始化 Qt Multimedia =====
+    // 尝试初始化 Qt Multimedia 
     m_player = new QMediaPlayer(this, QMediaPlayer::LowLatency);
 
     if (m_player->error() != QMediaPlayer::NoError) {
@@ -34,7 +24,7 @@ AudioPlayer::AudioPlayer(QObject* parent)
         m_useFallback = true;
     }
 
-    // ===== 检查/生成默认提示音 =====
+    // 检查/生成默认提示音 
     m_defaultSoundPath = QCoreApplication::applicationDirPath()
                          + "/default_reminder.wav";
 
@@ -53,8 +43,6 @@ bool AudioPlayer::isPlaying() const {
     }
     return false;
 }
-
-// ========== 播放提醒 ==========
 
 void AudioPlayer::playReminder(const QString& customFile) {
     QString filePath = customFile.isEmpty() ? m_defaultSoundPath : customFile;
@@ -82,9 +70,6 @@ void AudioPlayer::stop() {
         m_player->stop();
     }
 }
-
-// ========== 生成默认蜂鸣音 WAV ==========
-
 void AudioPlayer::generateDefaultSound() {
     // WAV 参数
     const int sampleRate = 44100;
@@ -146,9 +131,6 @@ void AudioPlayer::generateDefaultSound() {
     file.close();
     qDebug() << "默认提醒音已生成：" << m_defaultSoundPath;
 }
-
-// ========== 退路方案：paplay ==========
-
 void AudioPlayer::playFallback(const QString& filePath) {
     QProcess* proc = new QProcess(this);
     proc->setProgram("paplay");

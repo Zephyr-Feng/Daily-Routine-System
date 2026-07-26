@@ -9,13 +9,7 @@
 #include <QHBoxLayout>
 #include <QMessageBox>
 
-/**
- * @brief LoginWindow - 登录/注册对话框
- *
- * 用户输入用户名和密码，可以进行登录或注册。
- * 密码经过 SHA256 哈希后存储（由 auth.h 的 login/register_user 处理）。
- * 登录成功后 accept()，主程序进入 MainWindow。
- */
+
 class LoginWindow : public QDialog {
     Q_OBJECT
 
