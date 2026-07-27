@@ -2,9 +2,11 @@
 #include <fstream>
 #include <sstream>
 #include <iomanip>
+#include <mutex>
 
 int Task::next_id = 1;
 const string TASK_FILE = "tasks.txt";
+static recursive_mutex file_mtx;
 
 Priority str_to_priority(const string &s) {
     if (s == "high") return high;
@@ -75,6 +77,7 @@ void Task::set_id(int new_id) { id = new_id; }
 void Task::reset_next_id(int id) { next_id = id; }
 
 void save_task(const Task &t) {
+    lock_guard<recursive_mutex> lock(file_mtx);
     ofstream fout(TASK_FILE, ios::app);
     fout << t.show_id() << " " << t.show_name() << " "
          << time_to_str(t.show_stime()) << " "
@@ -84,6 +87,7 @@ void save_task(const Task &t) {
 }
 
 vector<Task> load_tasks() {
+    lock_guard<recursive_mutex> lock(file_mtx);
     vector<Task> tasks;
     int max_id = 0;
     ifstream fin(TASK_FILE);
@@ -104,6 +108,7 @@ vector<Task> load_tasks() {
 }
 
 void remove(int k) {
+    lock_guard<recursive_mutex> lock(file_mtx);
     vector<Task> t = load_tasks();
     for (int i = 0; i < t.size(); i++) {
         if (t[i].show_id() == k) {
@@ -118,6 +123,7 @@ void remove(int k) {
 }
 
 void show_task(int m, int d) {
+    lock_guard<recursive_mutex> lock(file_mtx);
     ifstream fin(TASK_FILE);
     string line;
     while (getline(fin, line)) {
@@ -137,6 +143,7 @@ void show_task(int m, int d) {
 }
 
 void show_task(int m) {
+    lock_guard<recursive_mutex> lock(file_mtx);
     fstream fin(TASK_FILE);
     string line;
     while (getline(fin, line)) {
@@ -156,6 +163,7 @@ void show_task(int m) {
 }
 
 void show_task() {
+    lock_guard<recursive_mutex> lock(file_mtx);
     fstream fin(TASK_FILE);
     string line;
     while (getline(fin, line)) {

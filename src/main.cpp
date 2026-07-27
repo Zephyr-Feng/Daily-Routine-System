@@ -5,7 +5,10 @@
 #include <chrono>
 #include <ctime>
 #include <set>
+#include <mutex>
 using namespace std;
+
+mutex cout_mtx;
 
 void reminder_check() {
     set<int> notified;
