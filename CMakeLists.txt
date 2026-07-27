@@ -8,7 +8,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTOMOC ON)
 
 # ===== 查找 Qt5 依赖 =====
-find_package(Qt5 REQUIRED COMPONENTS Widgets Multimedia)
+find_package(Qt5 REQUIRED COMPONENTS Widgets Multimedia Network)
 
 # ===== 可执行文件：包含所有 .cpp 源文件 =====
 add_executable(myschedule
@@ -21,6 +21,9 @@ add_executable(myschedule
     src/taskdialog.cpp
     src/audioplayer.cpp
     src/audiorecorder.cpp
+    src/speechrecognizer.cpp
+    src/voiceinputdialog.cpp
+    src/deepseekclient.cpp
 )
 
 # ===== 链接库 =====
@@ -30,6 +33,7 @@ add_executable(myschedule
 target_link_libraries(myschedule
     Qt5::Widgets
     Qt5::Multimedia
+    Qt5::Network
     ssl
     crypto
     pthread

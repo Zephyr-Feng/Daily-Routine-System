@@ -8,67 +8,84 @@ LoginWindow::LoginWindow(QWidget* parent)
 }
 
 void LoginWindow::setupUI() {
-    // 窗口基本设置 
+    // ========== 窗口基本设置 ==========
     setWindowTitle("日程管理系统 - 登录");
-    setFixedSize(380, 250);
+    setFixedSize(400, 340);
+    setStyleSheet("QDialog { background: #F5F7FA; }");
 
-    // 标题 
-    QLabel* titleLabel = new QLabel(" 日程管理系统");
-    titleLabel->setAlignment(Qt::AlignCenter);
-    titleLabel->setStyleSheet(
-        "font-size: 20px; font-weight: bold; margin-bottom: 10px;"
+    // ========== 顶部蓝色标题栏 ==========
+    QLabel* headerBg = new QLabel();
+    headerBg->setFixedHeight(100);
+    headerBg->setStyleSheet(
+        "background: qlineargradient(x1:0 y1:0, x2:1 y2:0, "
+        "stop:0 #1565C0, stop:1 #1976D2);"
     );
 
-    // 用户名输入行 
-    QLabel* userLabel = new QLabel("用户名：");
+    QLabel* iconLabel = new QLabel("📅", headerBg);
+    iconLabel->setStyleSheet("font-size: 36px; background: transparent;");
+    iconLabel->setAlignment(Qt::AlignCenter);
+    iconLabel->setGeometry(0, 8, 400, 40);
+
+    QLabel* titleLabel = new QLabel("日程管理系统", headerBg);
+    titleLabel->setAlignment(Qt::AlignCenter);
+    titleLabel->setStyleSheet(
+        "font-size: 20px; font-weight: bold; color: #FFFFFF; background: transparent;"
+    );
+    titleLabel->setGeometry(0, 50, 400, 30);
+
+    // ========== 白色卡片区域 ==========
+    QWidget* card = new QWidget();
+    card->setStyleSheet(
+        "QWidget { background: #FFFFFF; border-radius: 10px; }"
+    );
+
+    // 用户名
     m_usernameEdit = new QLineEdit();
     m_usernameEdit->setPlaceholderText("请输入用户名");
+    m_usernameEdit->setMinimumHeight(36);
 
-    QHBoxLayout* userLayout = new QHBoxLayout();
-    userLayout->addWidget(userLabel);
-    userLayout->addWidget(m_usernameEdit);
-
-    // 密码输入行 
-    QLabel* passLabel = new QLabel("密　码：");
+    // 密码
     m_passwordEdit = new QLineEdit();
-    m_passwordEdit->setEchoMode(QLineEdit::Password);  // 密码显示为 ●●●
+    m_passwordEdit->setEchoMode(QLineEdit::Password);
     m_passwordEdit->setPlaceholderText("请输入密码");
+    m_passwordEdit->setMinimumHeight(36);
 
-    QHBoxLayout* passLayout = new QHBoxLayout();
-    passLayout->addWidget(passLabel);
-    passLayout->addWidget(m_passwordEdit);
-
-    // 按钮行 
+    // 按钮
     m_loginBtn    = new QPushButton("登 录");
     m_registerBtn = new QPushButton("注 册");
 
-    m_loginBtn->setStyleSheet(
-        "QPushButton { background-color: #4CAF50; color: white; "
-        "padding: 8px 30px; font-size: 14px; border-radius: 4px; }"
-        "QPushButton:hover { background-color: #45a049; }"
-    );
+    m_loginBtn->setProperty("primary", true);
+    m_loginBtn->setMinimumHeight(36);
+    m_loginBtn->setCursor(Qt::PointingHandCursor);
+
+    m_registerBtn->setMinimumHeight(36);
+    m_registerBtn->setCursor(Qt::PointingHandCursor);
     m_registerBtn->setStyleSheet(
-        "QPushButton { padding: 8px 30px; font-size: 14px; border-radius: 4px; }"
+        "QPushButton { color: #1976D2; border: 1px solid #1976D2; }"
+        "QPushButton:hover { background: #E3F2FD; }"
     );
 
     QHBoxLayout* btnLayout = new QHBoxLayout();
-    btnLayout->addStretch();
-    btnLayout->addWidget(m_loginBtn);
+    btnLayout->setSpacing(12);
     btnLayout->addWidget(m_registerBtn);
-    btnLayout->addStretch();
+    btnLayout->addWidget(m_loginBtn);
 
-    // 总体布局 
+    QVBoxLayout* cardLayout = new QVBoxLayout(card);
+    cardLayout->setContentsMargins(30, 24, 30, 24);
+    cardLayout->setSpacing(12);
+    cardLayout->addWidget(m_usernameEdit);
+    cardLayout->addWidget(m_passwordEdit);
+    cardLayout->addSpacing(6);
+    cardLayout->addLayout(btnLayout);
+
+    // ========== 总体布局 ==========
     QVBoxLayout* mainLayout = new QVBoxLayout(this);
-    mainLayout->addWidget(titleLabel);
-    mainLayout->addSpacing(15);
-    mainLayout->addLayout(userLayout);
-    mainLayout->addSpacing(8);
-    mainLayout->addLayout(passLayout);
-    mainLayout->addSpacing(15);
-    mainLayout->addLayout(btnLayout);
-    mainLayout->addStretch();
+    mainLayout->setContentsMargins(20, 0, 20, 20);
+    mainLayout->setSpacing(0);
+    mainLayout->addWidget(headerBg);
+    mainLayout->addWidget(card, 1);
 
-    //  信号连接
+    // ========== 信号连接 ==========
     connect(m_loginBtn,    &QPushButton::clicked, this, &LoginWindow::onLogin);
     connect(m_registerBtn, &QPushButton::clicked, this, &LoginWindow::onRegister);
 
@@ -80,13 +97,13 @@ void LoginWindow::onLogin() {
     QString username = m_usernameEdit->text().trimmed();
     QString password = m_passwordEdit->text();
 
-    //  输入校验 
+    // ===== 输入校验 =====
     if (username.isEmpty() || password.isEmpty()) {
         QMessageBox::warning(this, "提示", "用户名和密码不能为空！");
         return;
     }
 
-    // 调用 auth.h 的登录函数 
+    // ===== 调用 auth.h 的登录函数 =====
     if (login(username.toStdString(), password.toStdString())) {
         m_username = username;
         QMessageBox::information(this, "成功",
@@ -104,7 +121,7 @@ void LoginWindow::onRegister() {
     QString username = m_usernameEdit->text().trimmed();
     QString password = m_passwordEdit->text();
 
-    //  输入校验 
+    // ===== 输入校验 =====
     if (username.isEmpty() || password.isEmpty()) {
         QMessageBox::warning(this, "提示", "用户名和密码不能为空！");
         return;
@@ -115,7 +132,7 @@ void LoginWindow::onRegister() {
         return;
     }
 
-    // 调用 auth.h 的注册函数 
+    // ===== 调用 auth.h 的注册函数 =====
     if (register_user(username.toStdString(), password.toStdString())) {
         QMessageBox::information(this, "注册成功",
             QString("账号 %1 注册成功！现在可以登录了。").arg(username));
