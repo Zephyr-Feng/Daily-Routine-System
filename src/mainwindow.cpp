@@ -1,12 +1,13 @@
 #include "mainwindow.h"
 #include "taskdialog.h"
-#include "voiceinputdialog.h"
-#include <QCoreApplication>
 #include <QHeaderView>
 #include <QVBoxLayout>
 #include <QMessageBox>
 #include <QDateTime>
 #include <QDebug>
+#include <QFileDialog>
+#include <QDir>
+#include <QFile>
 
 MainWindow::MainWindow(const QString& username, QWidget* parent)
     : QMainWindow(parent), m_username(username)
@@ -25,9 +26,6 @@ MainWindow::MainWindow(const QString& username, QWidget* parent)
     // 初始化音频播放器
     m_audioPlayer = new AudioPlayer(this);
 
-    // 初始化语音识别器
-    // Whisper small 模型，中文识别效果好
-    m_speechRec = new SpeechRecognizer("small", this);
 
     //  启动提醒定时器（每10秒检查一次）
     m_remindTimer = new QTimer(this);
@@ -83,10 +81,6 @@ void MainWindow::setupToolBar() {
 
     toolbar->addSeparator();
 
-    // 语音录入
-    QAction* voiceAction = toolbar->addAction(" 语音录入");
-    voiceAction->setToolTip("通过语音识别录入新任务");
-    connect(voiceAction, &QAction::triggered, this, &MainWindow::onVoiceInput);
 
     toolbar->addSeparator();
 
@@ -297,33 +291,18 @@ void MainWindow::checkReminders() {
     }
 }
 
-// 语音录入
 
-void MainWindow::onVoiceInput() {
-    if (!m_speechRec->isReady()) {
-        QMessageBox::warning(this, "语音识别未就绪",
-            "语音识别引擎未初始化！\n\n"
-            "请确认以下环境已配置：\n"
-            "1. Python3 已安装\n"
-            "2. pip3 install vosk\n"
-            "3. 中文语音模型已下载到程序目录\n"
-            "   (vosk-model-small-cn-0.22)");
-        return;
-    }
+void MainWindow::onSelectMusic() {
+    QString path = QFileDialog::getOpenFileName(this, "选择提醒音乐",
+        QDir::homePath(), "音频文件 (*.mp3 *.wav *.ogg *.flac)");
+    if (path.isEmpty()) return;
 
-    VoiceInputDialog dlg(m_speechRec, this);
-    dlg.setWindowTitle(" 语音录入任务");
+    m_customMusicPath = path;
+    m_statusLabel->setText("提醒音乐已设置");
 
-    if (dlg.exec() == QDialog::Accepted) {
-        Task newTask = dlg.getTask();
-        if (TaskManager::instance().addTask(newTask)) {
-            m_statusLabel->setText(" 语音任务添加成功");
-        } else {
-            QMessageBox::warning(this, "添加失败",
-                "语音任务添加失败！可能的原因：\n"
-                "• 开始时间与其他任务冲突\n"
-                "• 任务名称 + 开始时间重复");
-            m_statusLabel->setText(" 语音任务添加失败");
-        }
+    QFile file("music_config.txt");
+    if (file.open(QIODevice::WriteOnly)) {
+        file.write(path.toUtf8());
+        file.close();
     }
 }

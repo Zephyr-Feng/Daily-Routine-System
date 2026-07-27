@@ -12,7 +12,6 @@
 #include <QHeaderView>
 #include "taskmanager.h"
 #include "audioplayer.h"
-#include "speechrecognizer.h"
 
 
 class MainWindow : public QMainWindow {
@@ -37,9 +36,9 @@ private slots:
 
     /** 定时检查提醒 */
     void checkReminders();
+    void onSelectMusic();
 
     /** 语音录入任务 */
-    void onVoiceInput();
 
 private:
     /** 初始化界面布局 */
@@ -60,7 +59,7 @@ private:
     QLabel*              m_statusLabel;    // 状态标签
     QTimer*              m_remindTimer;    // 提醒定时器
     AudioPlayer*         m_audioPlayer;    // 音频播放器（Stage 2 新增）
-    SpeechRecognizer*    m_speechRec;      // 语音识别器（Stage 3 新增）
+    QString m_customMusicPath;
     QString              m_username;       // 当前用户名
 
     // 工具栏按钮
