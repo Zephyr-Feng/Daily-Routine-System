@@ -54,14 +54,20 @@ void LoginWindow::setupUI() {
     m_loginBtn    = new QPushButton("登 录");
     m_registerBtn = new QPushButton("注 册");
 
-    m_loginBtn->setProperty("primary", true);
-    m_loginBtn->setMinimumHeight(36);
+    m_loginBtn->setMinimumHeight(38);
     m_loginBtn->setCursor(Qt::PointingHandCursor);
+    m_loginBtn->setStyleSheet(
+        "QPushButton { background: #1976D2; color: #FFFFFF; border: none; "
+        "border-radius: 6px; font-size: 15px; font-weight: bold; }"
+        "QPushButton:hover { background: #1565C0; }"
+        "QPushButton:pressed { background: #0D47A1; }"
+    );
 
-    m_registerBtn->setMinimumHeight(36);
+    m_registerBtn->setMinimumHeight(38);
     m_registerBtn->setCursor(Qt::PointingHandCursor);
     m_registerBtn->setStyleSheet(
-        "QPushButton { color: #1976D2; border: 1px solid #1976D2; }"
+        "QPushButton { color: #1976D2; border: 1px solid #1976D2; "
+        "border-radius: 6px; font-size: 13px; }"
         "QPushButton:hover { background: #E3F2FD; }"
     );
 
