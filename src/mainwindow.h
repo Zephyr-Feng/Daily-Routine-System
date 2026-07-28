@@ -11,7 +11,6 @@
 #include <QAction>
 #include <QHeaderView>
 #include <QCalendarWidget>
-#include <QSet>
 #include "taskmanager.h"
 
 class MainWindow : public QMainWindow {
@@ -46,7 +45,6 @@ private:
     QTimer*              m_remindTimer;
     QString              m_username;
     QDate                m_selectedDate;
- QSet<QDate> m_highlightedDates;
 
     QAction* m_addAction;
     QAction* m_deleteAction;
