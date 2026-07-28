@@ -7,9 +7,10 @@
 #include <QMessageBox>
 #include <QDateTime>
 #include <QDebug>
+#include <chrono>
 
 MainWindow::MainWindow(const QString& username, QWidget* parent)
-    : QMainWindow(parent), m_username(username)
+    : QMainWindow(parent), m_username(username), m_running(true)
 {
     setupUI();
     setupToolBar();
@@ -25,10 +26,8 @@ MainWindow::MainWindow(const QString& username, QWidget* parent)
     refreshTable();
     updateCalendar();
 
-    m_remindTimer = new QTimer(this);
-    connect(m_remindTimer, &QTimer::timeout,
-            this, &MainWindow::checkReminders);
-    m_remindTimer->start(10000);
+    // 启动后台提醒线程
+    m_remindThread = std::thread(&MainWindow::reminderLoop, this);
 
     connect(&TaskManager::instance(), &TaskManager::tasksChanged,
             this, &MainWindow::refreshTable);
@@ -37,6 +36,12 @@ MainWindow::MainWindow(const QString& username, QWidget* parent)
 
     connect(m_calendar, &QCalendarWidget::clicked,
             this, &MainWindow::onDateClicked);
+}
+
+MainWindow::~MainWindow() {
+    m_running = false;
+    if (m_remindThread.joinable())
+        m_remindThread.join();
 }
 
 void MainWindow::setupUI() {
@@ -189,7 +194,11 @@ void MainWindow::refreshTable() {
 }
 
 void MainWindow::updateCalendar() {
-    m_calendar->setDateTextFormat(QDate(), QTextCharFormat());
+    // 清除旧高亮
+    for (const QDate& d : m_highlightedDates) {
+        m_calendar->setDateTextFormat(d, QTextCharFormat());
+    }
+    m_highlightedDates.clear();
 
     const auto& tasks = TaskManager::instance().allTasks();
     QTextCharFormat taskFormat;
@@ -201,6 +210,7 @@ void MainWindow::updateCalendar() {
         QDate d(st.year, st.month, st.day);
         if (d.isValid()) {
             m_calendar->setDateTextFormat(d, taskFormat);
+            m_highlightedDates.insert(d);
         }
     }
 }
@@ -286,29 +296,41 @@ void MainWindow::onEditTask() {
     }
 }
 
-void MainWindow::checkReminders() {
-    std::vector<Task> due = TaskManager::instance().checkReminders();
+void MainWindow::reminderLoop() {
+    while (m_running) {
+        std::this_thread::sleep_for(std::chrono::seconds(10));
+        if (!m_running) break;
 
-    for (const auto& task : due) {
-        QMessageBox* msgBox = new QMessageBox(this);
-        msgBox->setWindowTitle("⏰ 日程提醒");
-        msgBox->setIcon(QMessageBox::Information);
-        msgBox->setText(QString(
-            "<h3>任务提醒</h3>"
-            "<p><b>任务：</b>%1</p>"
-            "<p><b>开始时间：</b>%2</p>"
-            "<p><b>优先级：</b>%3 | <b>分类：</b>%4</p>"
-        ).arg(
-            QString::fromStdString(task.getName()),
-            QString::fromStdString(task.getStartTime().toString()),
-            QString::fromStdString(task.priorityToString()),
-            QString::fromStdString(task.classifyToString())
-        ));
-        msgBox->setStandardButtons(QMessageBox::Ok);
-        msgBox->setAttribute(Qt::WA_DeleteOnClose);
-        msgBox->show();
-
-        // ===== 播放提醒音 =====
-        system("aplay remind.wav &");
+        std::vector<Task> due = TaskManager::instance().checkReminders();
+        if (!due.empty()) {
+            QMetaObject::invokeMethod(this, [this, due]() {
+                for (const auto& task : due) {
+                    showReminder(task);
+                }
+            }, Qt::QueuedConnection);
+        }
     }
+}
+
+void MainWindow::showReminder(const Task& task) {
+    QMessageBox* msgBox = new QMessageBox(this);
+    msgBox->setWindowTitle("⏰ 日程提醒");
+    msgBox->setIcon(QMessageBox::Information);
+    msgBox->setText(QString(
+        "<h3>任务提醒</h3>"
+        "<p><b>任务：</b>%1</p>"
+        "<p><b>开始时间：</b>%2</p>"
+        "<p><b>优先级：</b>%3 | <b>分类：</b>%4</p>"
+    ).arg(
+        QString::fromStdString(task.getName()),
+        QString::fromStdString(task.getStartTime().toString()),
+        QString::fromStdString(task.priorityToString()),
+        QString::fromStdString(task.classifyToString())
+    ));
+    msgBox->setStandardButtons(QMessageBox::Ok);
+    msgBox->setAttribute(Qt::WA_DeleteOnClose);
+    msgBox->show();
+
+    // ===== 播放提醒音 =====
+    system("aplay remind.wav &");
 }

@@ -7,10 +7,12 @@
 #include <QToolBar>
 #include <QStatusBar>
 #include <QLabel>
-#include <QTimer>
 #include <QAction>
 #include <QHeaderView>
 #include <QCalendarWidget>
+#include <QSet>
+#include <thread>
+#include <atomic>
 #include "taskmanager.h"
 
 class MainWindow : public QMainWindow {
@@ -18,7 +20,7 @@ class MainWindow : public QMainWindow {
 
 public:
     explicit MainWindow(const QString& username, QWidget* parent = nullptr);
-    ~MainWindow() {}
+    ~MainWindow();
 
 private slots:
     void onAddTask();
@@ -26,11 +28,12 @@ private slots:
     void onEditTask();
     void refreshTable();
     void showAllTasks();
-    void checkReminders();
+    void showReminder(const Task& task);
     void onDateClicked(const QDate& date);
     void updateCalendar();
 
 private:
+    void reminderLoop();
     void setupUI();
     void setupToolBar();
     void setupTable();
@@ -42,9 +45,11 @@ private:
     QCalendarWidget*     m_calendar;
     QLabel*              m_userLabel;
     QLabel*              m_statusLabel;
-    QTimer*              m_remindTimer;
+    std::thread          m_remindThread;
+    std::atomic<bool>    m_running;
     QString              m_username;
     QDate                m_selectedDate;
+    QSet<QDate>          m_highlightedDates;
 
     QAction* m_addAction;
     QAction* m_deleteAction;
