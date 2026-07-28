@@ -25,7 +25,7 @@ int TaskManager::loadFromFile(const QString& filePath) {
         return -1;  // 无法打开文件
     }
 
-    std::lock_guard<std::mutex> lock(m_mutex);
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
     m_tasks.clear();
 
     int maxId = 0;
@@ -63,7 +63,7 @@ bool TaskManager::saveToFile(const QString& filePath) {
         return false;
     }
 
-    std::lock_guard<std::mutex> lock(m_mutex);
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
 
     QTextStream out(&file);
     for (const auto& task : m_tasks) {
@@ -77,7 +77,7 @@ bool TaskManager::saveToFile(const QString& filePath) {
 // ========== 添加任务 ==========
 
 bool TaskManager::addTask(const Task& task) {
-    std::lock_guard<std::mutex> lock(m_mutex);
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
 
     // 校验1：开始时间不能与其他任务相同
     for (const auto& t : m_tasks) {
@@ -111,7 +111,7 @@ bool TaskManager::addTask(const Task& task) {
 // ========== 删除任务 ==========
 
 bool TaskManager::deleteTask(int id) {
-    std::lock_guard<std::mutex> lock(m_mutex);
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
 
     auto it = std::find_if(m_tasks.begin(), m_tasks.end(),
                            [id](const Task& t) { return t.getId() == id; });
@@ -129,7 +129,7 @@ bool TaskManager::deleteTask(int id) {
 // ========== 更新任务 ==========
 
 bool TaskManager::updateTask(const Task& updated) {
-    std::lock_guard<std::mutex> lock(m_mutex);
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
 
     for (auto& t : m_tasks) {
         if (t.getId() == updated.getId()) {
@@ -158,7 +158,7 @@ Task* TaskManager::findTask(int id) {
 // ========== 提醒检查 ==========
 
 std::vector<Task> TaskManager::checkReminders() {
-    std::lock_guard<std::mutex> lock(m_mutex);
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
 
     std::vector<Task> due;
     QDateTime now = QDateTime::currentDateTime();

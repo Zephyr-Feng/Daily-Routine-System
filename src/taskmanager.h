@@ -112,7 +112,7 @@ private:
     TaskManager& operator=(const TaskManager&) = delete;
 
     std::vector<Task> m_tasks;              // 任务列表
-    std::mutex m_mutex;                     // 线程安全锁
+    std::recursive_mutex m_mutex;                     // 线程安全锁
     std::vector<int> m_reminded_ids;        // 已提醒过的任务 id（避免重复提醒）
 };
 
