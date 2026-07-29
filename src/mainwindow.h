@@ -15,6 +15,8 @@
 #include <atomic>
 #include "taskmanager.h"
 
+class SpeechRecognizer;
+
 class MainWindow : public QMainWindow {
     Q_OBJECT
 
@@ -31,6 +33,7 @@ private slots:
     void showReminder(const Task& task);
     void onDateClicked(const QDate& date);
     void updateCalendar();
+    void onVoiceInput();
 
 private:
     void reminderLoop();
@@ -56,6 +59,9 @@ private:
     QAction* m_editAction;
     QAction* m_refreshAction;
     QAction* m_showAllAction;
+    QAction* m_voiceAction;
+
+    SpeechRecognizer* m_recognizer;  // 语音识别引擎
 };
 
 #endif // MAINWINDOW_H

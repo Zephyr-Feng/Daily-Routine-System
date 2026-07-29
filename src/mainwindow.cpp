@@ -1,5 +1,9 @@
 #include "mainwindow.h"
 #include "taskdialog.h"
+#include "voiceinputdialog.h"
+#include "speechrecognizer.h"
+#include "deepseekclient.h"
+#include <QDir>
 #include <QHeaderView>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -12,6 +16,10 @@
 MainWindow::MainWindow(const QString& username, QWidget* parent)
     : QMainWindow(parent), m_username(username), m_running(true)
 {
+    // 初始化语音识别引擎（tiny 本地模型，无需网络）
+    m_recognizer = new SpeechRecognizer(
+        QDir::homePath() + "/whisper-models/tiny", this);
+
     setupUI();
     setupToolBar();
     setupCalendar();
@@ -84,6 +92,12 @@ void MainWindow::setupToolBar() {
     m_refreshAction = toolbar->addAction("↻ 刷新");
     m_refreshAction->setToolTip("刷新任务列表");
     connect(m_refreshAction, &QAction::triggered, this, &MainWindow::refreshTable);
+
+    toolbar->addSeparator();
+
+    m_voiceAction = toolbar->addAction("🎙 语音录入");
+    m_voiceAction->setToolTip("通过语音录入新任务（按住说话，AI 自动识别）");
+    connect(m_voiceAction, &QAction::triggered, this, &MainWindow::onVoiceInput);
 
     toolbar->setStyleSheet(
         "QToolBar { spacing: 5px; padding: 4px; background: #f5f5f5; border-bottom: 1px solid #ddd; }"
@@ -333,4 +347,31 @@ void MainWindow::showReminder(const Task& task) {
 
     // ===== 播放提醒音 =====
     system("aplay remind.wav &");
+}
+
+void MainWindow::onVoiceInput() {
+    if (!m_recognizer->isReady()) {
+        QMessageBox::warning(this, "语音录入不可用",
+            "语音识别引擎未就绪。\n\n"
+            "请确保已安装 faster-whisper：\n"
+            "  pip3 install faster-whisper\n\n"
+            "并已下载中文模型：\n"
+            "  python3 -c \"from faster_whisper import WhisperModel; "
+            "WhisperModel('small', device='cpu', compute_type='int8')\"");
+        return;
+    }
+
+    VoiceInputDialog dlg(m_recognizer, this);
+    if (dlg.exec() == QDialog::Accepted) {
+        Task newTask = dlg.getTask();
+        if (TaskManager::instance().addTask(newTask)) {
+            m_statusLabel->setText("✅ 语音任务添加成功");
+        } else {
+            QMessageBox::warning(this, "添加失败",
+                "任务添加失败！可能的原因：\n"
+                "• 开始时间与其他任务冲突\n"
+                "• 任务名称 + 开始时间重复");
+            m_statusLabel->setText("❌ 语音任务添加失败");
+        }
+    }
 }
