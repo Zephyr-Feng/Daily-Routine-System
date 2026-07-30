@@ -26,6 +26,10 @@ add_executable(myschedule
  src/voiceinputdialog.cpp
 )
 
+# ===== 复制 Python 脚本到构建目录 =====
+configure_file(src/whisper_stt.py ${CMAKE_BINARY_DIR}/whisper_stt.py COPYONLY)
+configure_file(src/remind.wav ${CMAKE_BINARY_DIR}/remind.wav COPYONLY)
+
 # ===== 链接库 =====
 target_link_libraries(myschedule
  Qt5::Widgets

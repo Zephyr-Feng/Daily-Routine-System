@@ -13,6 +13,15 @@
 #include <QDebug>
 #include <chrono>
 
+
+// ======================== 构造函数 ========================
+// MainWindow 初始化入口，按顺序：
+//   1. 初始化语音识别引擎（本地 tiny 模型，离线运行）
+//   2. 构建 UI 界面（工具栏 + 日历 + 表格）
+//   3. 从文件加载已保存的任务
+//   4. 默认选中今天，刷新显示
+//   5. 启动后台提醒线程（每 10 秒检查）
+//   6. 连接信号与槽（数据变更自动刷新界面）
 MainWindow::MainWindow(const QString& username, QWidget* parent)
     : QMainWindow(parent), m_username(username), m_running(true)
 {
@@ -46,12 +55,18 @@ MainWindow::MainWindow(const QString& username, QWidget* parent)
             this, &MainWindow::onDateClicked);
 }
 
+
+// ======================== 析构函数 ========================
+// 设置退出标记 → 等待提醒线程安全结束
 MainWindow::~MainWindow() {
     m_running = false;
     if (m_remindThread.joinable())
         m_remindThread.join();
 }
 
+
+// ======================== 设置界面基本元素 ========================
+// 状态栏：左侧显示用户名，右侧显示状态信息
 void MainWindow::setupUI() {
     resize(900, 500);
     setWindowTitle("日程管理系统 - " + m_username);
@@ -65,6 +80,9 @@ void MainWindow::setupUI() {
     statusBar()->addPermanentWidget(m_statusLabel);
 }
 
+
+// ======================== 工具栏 ========================
+// 添加/编辑/删除、显示全部、刷新、语音录入等快捷操作按钮
 void MainWindow::setupToolBar() {
     QToolBar* toolbar = addToolBar("工具栏");
     toolbar->setMovable(false);
@@ -106,6 +124,9 @@ void MainWindow::setupToolBar() {
     );
 }
 
+
+// ======================== 设置日历控件 ========================
+// 左侧日历：周一起始，固定宽度，隐藏垂直表头
 void MainWindow::setupCalendar() {
     m_calendar = new QCalendarWidget();
     m_calendar->setGridVisible(true);
@@ -114,6 +135,10 @@ void MainWindow::setupCalendar() {
     m_calendar->setVerticalHeaderFormat(QCalendarWidget::NoVerticalHeader);
 }
 
+
+// ======================== 设置任务表格 ========================
+// 右侧表格：6 列（ID、名称、开始时间、提醒时间、优先级、分类）
+// 与日历用 QSplitter 左右分栏显示
 void MainWindow::setupTable() {
     m_tableView = new QTableView();
     m_model     = new QStandardItemModel(0, 6, this);
@@ -151,6 +176,10 @@ void MainWindow::setupTable() {
     setCentralWidget(splitter);
 }
 
+
+// ======================== 刷新表格显示 ========================
+// 清空旧数据 → 从 TaskManager 读取 → 按日期筛选 → 填充表格行
+// 高优先级任务显示红色文字
 void MainWindow::refreshTable() {
     m_model->removeRows(0, m_model->rowCount());
 
@@ -207,6 +236,9 @@ void MainWindow::refreshTable() {
     }
 }
 
+
+// ======================== 更新日历高亮 ========================
+// 遍历所有任务，将有任务的日期用蓝底粗体标注
 void MainWindow::updateCalendar() {
     // 清除旧高亮
     for (const QDate& d : m_highlightedDates) {
@@ -229,6 +261,9 @@ void MainWindow::updateCalendar() {
     }
 }
 
+
+// ======================== 日历点击事件 ========================
+// 用户点击某个日期 → 筛选该日任务并刷新表格
 void MainWindow::onDateClicked(const QDate& date) {
     m_selectedDate = date;
     refreshTable();
@@ -236,12 +271,18 @@ void MainWindow::onDateClicked(const QDate& date) {
         QString("📅 %1").arg(date.toString("yyyy 年 M 月 d 日")));
 }
 
+
+// ======================== 显示全部 ========================
+// 取消日期筛选（m_selectedDate 置为无效），显示所有任务
 void MainWindow::showAllTasks() {
     m_selectedDate = QDate();
     refreshTable();
     m_statusLabel->setText("显示全部任务");
 }
 
+
+// ======================== 获取选中任务 ID ========================
+// 从表格当前选中行提取第一列（ID），无选中时返回 -1
 int MainWindow::selectedTaskId() const {
     QModelIndexList selection = m_tableView->selectionModel()->selectedRows();
     if (selection.isEmpty()) return -1;
@@ -250,6 +291,9 @@ int MainWindow::selectedTaskId() const {
     return m_model->item(row, 0)->text().toInt();
 }
 
+
+// ======================== 添加任务 ========================
+// 弹出 TaskDialog 让用户填写 → 确认后加入 TaskManager
 void MainWindow::onAddTask() {
     TaskDialog dlg(this);
     dlg.setAddMode();
@@ -269,6 +313,9 @@ void MainWindow::onAddTask() {
     }
 }
 
+
+// ======================== 删除任务 ========================
+// 先检查是否有选中 → 确认弹窗 → 执行删除
 void MainWindow::onDeleteTask() {
     int id = selectedTaskId();
     if (id < 0) {
@@ -288,6 +335,9 @@ void MainWindow::onDeleteTask() {
     }
 }
 
+
+// ======================== 编辑任务 ========================
+// 选中任务 → 弹出预先填好的对话框 → 保存修改
 void MainWindow::onEditTask() {
     int id = selectedTaskId();
     if (id < 0) {
@@ -310,6 +360,10 @@ void MainWindow::onEditTask() {
     }
 }
 
+
+// ======================== 后台提醒线程 ========================
+// 独立线程循环，每 10 秒检查一次是否有任务到提醒时间
+// 用 QMetaObject::invokeMethod + QueuedConnection 把 UI 操作发回主线程
 void MainWindow::reminderLoop() {
     while (m_running) {
         std::this_thread::sleep_for(std::chrono::seconds(10));
@@ -326,6 +380,9 @@ void MainWindow::reminderLoop() {
     }
 }
 
+
+// ======================== 显示提醒弹窗 ========================
+// 弹出 QMessageBox 显示任务详情，同时播放 WAV 提示音
 void MainWindow::showReminder(const Task& task) {
     QMessageBox* msgBox = new QMessageBox(this);
     msgBox->setWindowTitle("⏰ 日程提醒");
@@ -349,6 +406,8 @@ void MainWindow::showReminder(const Task& task) {
     system("aplay remind.wav &");
 }
 
+// ======================== 语音录入 ========================
+// 检查语音引擎是否就绪 → 打开语音录入对话框 → AI 解析结果并添加任务
 void MainWindow::onVoiceInput() {
     if (!m_recognizer->isReady()) {
         QMessageBox::warning(this, "语音录入不可用",

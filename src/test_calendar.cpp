@@ -36,7 +36,7 @@ int main() {
  Task tb(B, Time(2026,7,29,10,0), Time(2026,7,29,9,0), MEDIUM, PLAY);
  assert(TaskManager::instance().addTask(ta));
  assert(TaskManager::instance().addTask(tb));
- 
+
  // 检查日期
  const auto& all = TaskManager::instance().allTasks();
  assert(all.size() == 2);

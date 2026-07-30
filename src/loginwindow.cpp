@@ -22,11 +22,11 @@ void LoginWindow::setupUI() {
     //用户名输入行
     QLabel* userLabel = new QLabel("用户名：");
     m_usernameEdit = new QLineEdit();
-    m_usernameEdit->setPlaceholderText("请输入用户名");
+    m_usernameEdit->setPlaceholderText("请输入用户名");//占位
 
     QHBoxLayout* userLayout = new QHBoxLayout();
     userLayout->addWidget(userLabel);
-    userLayout->addWidget(m_usernameEdit);
+    userLayout->addWidget(m_usernameEdit);//添加控件
 
     //密码输入行
     QLabel* passLabel = new QLabel("密码：");
@@ -52,10 +52,10 @@ void LoginWindow::setupUI() {
     );
 
     QHBoxLayout* btnLayout = new QHBoxLayout();
-    btnLayout->addStretch();
+    btnLayout->addStretch();//左边添加空白
     btnLayout->addWidget(m_loginBtn);
     btnLayout->addWidget(m_registerBtn);
-    btnLayout->addStretch();
+    btnLayout->addStretch();//右边添加空白
 
     //总体布局
     QVBoxLayout* mainLayout = new QVBoxLayout(this);
@@ -77,7 +77,7 @@ void LoginWindow::setupUI() {
 }
 
 void LoginWindow::onLogin() {
-    QString username = m_usernameEdit->text().trimmed();
+    QString username = m_usernameEdit->text().trimmed();//去掉空白
     QString password = m_passwordEdit->text();
 
     //输入校验

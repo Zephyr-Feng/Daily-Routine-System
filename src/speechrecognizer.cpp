@@ -13,6 +13,7 @@
 #include <QDebug>
 #include <QCoreApplication>
 #include <QFileInfo>
+#include <QDir>
 
 SpeechRecognizer::SpeechRecognizer(const QString& modelSize, QObject* parent)
     : QObject(parent)
@@ -74,17 +75,29 @@ QString SpeechRecognizer::recognize(const QString& wavFilePath) {
         return QString();
     }
 
-    // ===== 通过 QProcess 调用 Whisper Python 脚本 =====
+    // ===== 查找 whisper_stt.py 脚本 =====
+    // 优先找可执行文件同目录（build/），再找源码目录（src/）
     QString scriptPath = QCoreApplication::applicationDirPath() + "/whisper_stt.py";
+    if (!QFileInfo::exists(scriptPath)) {
+        QDir dir(QCoreApplication::applicationDirPath());
+        dir.cdUp(); // 从 build/ 回到项目根目录
+        scriptPath = dir.absolutePath() + "/src/whisper_stt.py";
+    }
 
+    if (!QFileInfo::exists(scriptPath)) {
+        qWarning() << "whisper_stt.py 未找到：" << scriptPath;
+        return QString();
+    }
+
+    // ===== 通过 QProcess 调用 Whisper Python 脚本 =====
     QProcess proc;
     proc.start("python3", {
         scriptPath,
-        m_modelSize,    // 参数1: 模型大小（small）
+        m_modelSize,    // 参数1: 模型大小（small）或本地模型路径
         wavFilePath     // 参数2: WAV 文件路径
     });
 
-    if (!proc.waitForFinished(120000)) {  // 2分钟超时（Whisper 比 Vosk 慢）
+    if (!proc.waitForFinished(120000)) {  // 2分钟超时
         qWarning() << "语音识别超时（120秒）";
         proc.kill();
         return QString();
